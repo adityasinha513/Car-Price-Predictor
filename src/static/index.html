@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Price Prediction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+        .container { max-width: 400px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 32px; }
+        h2 { text-align: center; color: #333; }
+        label { display: block; margin-top: 16px; color: #555; }
+        input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 12px; margin-top: 24px; background: #007bff; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 24px; text-align: center; font-size: 18px; }
+        .error { color: #d9534f; }
+        header { background: #007bff; color: #fff; padding: 10px 0; text-align: center; }
+        footer { background: #333; color: #fff; text-align: center; padding: 10px 0; position: fixed; bottom: 0; width: 100%; }
+        .spinner { display: none; margin: 20px auto; border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: 120px; background-color: #555; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -60px; opacity: 0; transition: opacity 0.3s; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Car Price Prediction</h1>
+    </header>
+    <div class="container">
+        <h2>Predict Car Price</h2>
+        <form id="predictForm">
+            <label for="company">Company</label>
+            <select id="company" name="company" required onchange="updateCarOptions()">
+                <option value="">Select Company</option>
+                <option value="Maruti">Maruti</option>
+                <option value="Hyundai">Hyundai</option>
+                <option value="Honda">Honda</option>
+                <option value="Toyota">Toyota</option>
+                <option value="Mahindra">Mahindra</option>
+            </select>
+
+            <label for="name">Car Name</label>
+            <select id="name" name="name" required>
+                <option value="">Select Car Name</option>
+            </select>
+
+            <label for="year">Year</label>
+            <input type="number" id="year" name="year" min="1900" max="2024" required>
+
+            <label for="kms_driven">Kilometers Driven</label>
+            <input type="number" id="kms_driven" name="kms_driven" min="0" required>
+
+            <label for="fuel_type">Fuel Type</label>
+            <select id="fuel_type" name="fuel_type" required>
+                <option value="">Select Fuel Type</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="CNG">CNG</option>
+                <option value="Electric">Electric</option>
+                <option value="Hybrid">Hybrid</option>
+            </select>
+
+            <button type="submit">Predict Price</button>
+            <button type="reset">Reset</button>
+        </form>
+        <div class="spinner" id="spinner"></div>
+        <div class="result" id="result"></div>
+    </div>
+    <footer>
+        <p>&copy; 2025 Car Price Prediction. All rights reserved.</p>
+    </footer>
+    <script>
+        const carOptions = {
+            Maruti: ['Swift', 'Baleno', 'Creta', 'City', 'Innova'],
+            Hyundai: ['i10', 'i20', 'Creta', 'Verna', 'Tucson'],
+            Honda: ['City', 'Amaze', 'Civic', 'CR-V', 'Jazz'],
+            Toyota: ['Innova', 'Fortuner', 'Camry', 'Corolla', 'Yaris'],
+            Mahindra: ['XUV500', 'Scorpio', 'Thar', 'Bolero', 'XUV300']
+        };
+
+        function updateCarOptions() {
+            const company = document.getElementById('company').value;
+            const carSelect = document.getElementById('name');
+            carSelect.innerHTML = '<option value="">Select Car Name</option>';
+            if (company && carOptions[company]) {
+                carOptions[company].forEach(car => {
+                    const option = document.createElement('option');
+                    option.value = car;
+                    option.textContent = car;
+                    carSelect.appendChild(option);
+                });
+            }
+        }
+
+        document.getElementById('predictForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('result');
+            const spinner = document.getElementById('spinner');
+            resultDiv.textContent = 'Predicting...';
+            resultDiv.className = 'result';
+            spinner.style.display = 'block';
+            const data = {
+                name: document.getElementById('name').value,
+                company: document.getElementById('company').value,
+                year: parseInt(document.getElementById('year').value),
+                kms_driven: parseFloat(document.getElementById('kms_driven').value),
+                fuel_type: document.getElementById('fuel_type').value
+            };
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const res = await response.json();
+                spinner.style.display = 'none';
+                if (res.status === 'success') {
+                    resultDiv.textContent = `Predicted Price: ₹${res.predicted_price.toLocaleString('en-IN', {maximumFractionDigits:0})}`;
+                } else {
+                    resultDiv.textContent = res.message || 'Prediction failed.';
+                    resultDiv.className = 'result error';
+                }
+            } catch (err) {
+                spinner.style.display = 'none';
+                resultDiv.textContent = 'Error connecting to server.';
+                resultDiv.className = 'result error';
+            }
+        });
+    </script>
+</body>
+</html> 
