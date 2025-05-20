@@ -29,6 +29,16 @@ car-price-prediction/
 - Loading spinner and error handling
 - Input validation and user feedback
 
+## UI Improvements
+
+The latest version includes several UI enhancements:
+- Dynamic dropdown menus that update based on user selection
+- Loading spinner during prediction
+- Improved form layout and spacing
+- Better error handling and user feedback
+- Mobile-responsive design
+- Modern color scheme and typography
+
 ## Installation
 
 1. Clone the repository:
